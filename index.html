@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leave Your Mark In The Fog - Insert Your Name</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Background Texture & Fog Atmosphere -->
+    <div class="fog-background">
+      <div class="mesh-overlay"></div>
+      <div class="fog-clouds"></div>
+      <div class="glow-orb orb-top-left"></div>
+      <canvas id="smokeCanvas" class="smoke-canvas"></canvas>
+    </div>
+
+    <!-- Center Hero UI -->
+    <main class="center-container">
+      <header class="title-group">
+        <p class="subtitle">LEAVE YOUR MARK IN THE FOG</p>
+        <h1 class="main-title">INSERT YOUR NAME</h1>
+      </header>
+
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="nameInput" 
+          class="name-input" 
+          placeholder="Your name..." 
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="button" id="enterBtn" class="enter-btn">ENTER</button>
+      </div>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

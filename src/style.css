@@ -1,0 +1,249 @@
+/* Reset & Global Tokens */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-color: #0e1013;
+  --gold-sub: #9e824c;
+  --gold-accent: #c29d5b;
+  --gold-hover: #e5c58a;
+  --border-gold: #382e20;
+  --border-gold-focus: #7a633c;
+  --text-main: #ece7dc;
+  --text-muted: #5e574a;
+  --font-serif-title: "Cinzel Decorative", "Cinzel", "Cormorant Garamond", Georgia, serif;
+  --font-serif-sub: "Cinzel", "Cormorant Garamond", Georgia, serif;
+  --font-serif-name: "Cormorant Garamond", Georgia, serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: var(--font-serif-sub);
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background Atmosphere & Grid Texture */
+.fog-background {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-color: #0c0e11;
+  overflow: hidden;
+}
+
+/* Fine display mesh texture (replicates the screen mesh seen in the reference) */
+.mesh-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(ellipse at 50% 50%, rgba(32, 28, 22, 0.45) 0%, rgba(12, 14, 17, 0.88) 65%, #08090c 100%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 3px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Drifting soft fog layers */
+.fog-clouds {
+  position: absolute;
+  inset: -20%;
+  width: 140%;
+  height: 140%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(45, 38, 28, 0.18) 0%, transparent 40%),
+    radial-gradient(circle at 75% 65%, rgba(35, 30, 25, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(25, 23, 20, 0.15) 0%, transparent 50%);
+  filter: blur(40px);
+  animation: fogFloat 30s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes fogFloat {
+  0% { transform: translate(-2%, -2%) scale(1); }
+  50% { transform: translate(2%, 1%) scale(1.03); }
+  100% { transform: translate(-1%, 2%) scale(0.98); }
+}
+
+/* Glowing orbs in the background */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  filter: blur(28px);
+}
+
+.orb-top-left {
+  top: 1%;
+  left: 3%;
+  width: 110px;
+  height: 110px;
+  background: radial-gradient(circle, rgba(140, 160, 180, 0.16) 0%, transparent 70%);
+}
+
+.orb-center {
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 350px;
+  background: radial-gradient(ellipse, rgba(160, 128, 75, 0.1) 0%, transparent 75%);
+}
+
+/* Smoke & Fog Trail Canvas */
+.smoke-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Center Hero UI */
+.center-container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 0 20px;
+  margin-top: -3vh; /* visually centered slightly higher just like the screenshot */
+  text-align: center;
+}
+
+.title-group {
+  margin-bottom: 34px;
+}
+
+/* Subtitle: "LEAVE YOUR MARK IN THE FOG" */
+.subtitle {
+  font-family: var(--font-serif-sub);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: var(--gold-sub);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(158, 130, 76, 0.25);
+}
+
+/* Main Title: "INSERT YOUR NAME" */
+.main-title {
+  font-family: var(--font-serif-title);
+  font-size: clamp(2.6rem, 5.8vw, 4.2rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-main);
+  text-shadow: 
+    0 0 20px rgba(236, 231, 220, 0.2),
+    0 0 45px rgba(160, 130, 75, 0.15);
+  line-height: 1.15;
+}
+
+/* Input & Button Container */
+.input-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 440px;
+}
+
+/* Name Input */
+.name-input {
+  flex: 1;
+  background-color: #0b0d10;
+  border: 1px solid #332b1d;
+  border-radius: 1px;
+  color: #ece7dc;
+  font-family: var(--font-serif-name);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  padding: 13px 18px;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.name-input::placeholder {
+  color: #5b5446;
+  font-family: var(--font-serif-name);
+  font-size: 1.05rem;
+  font-style: normal;
+  opacity: 1;
+}
+
+.name-input:focus {
+  border-color: #6d5631;
+  background-color: #0d0f13;
+  box-shadow: 0 0 10px rgba(109, 86, 49, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* Enter Button (Pure UI) */
+.enter-btn {
+  background-color: #111215;
+  border: 1px solid #332b1d;
+  border-radius: 1px;
+  color: #6f5934;
+  font-family: var(--font-serif-sub);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  padding: 13px 26px;
+  cursor: pointer;
+  outline: none;
+  text-transform: uppercase;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.enter-btn:hover {
+  background-color: #18191e;
+  border-color: var(--gold-sub);
+  color: var(--gold-hover);
+  box-shadow: 0 0 16px rgba(194, 157, 91, 0.25);
+}
+
+.enter-btn:active {
+  transform: scale(0.98);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .input-group {
+    flex-direction: column;
+    max-width: 320px;
+    gap: 10px;
+  }
+
+  .name-input, .enter-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+  }
+
+  .main-title {
+    font-size: 2.2rem;
+  }
+}
