@@ -180,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'sigendut',
       name: 'SI GENDUT',
       tier: 'COMMON',
-      percentage: 40,
-      cumulative: 40, // 0 - 39 (40% drop chance)
+      percentage: 20,
+      cumulative: 20, // 0 - 19 (20% drop chance)
       tierStyle: {
         border: '#7f8c8d',
         glow: 'rgba(127, 140, 141, 0.4)',
@@ -203,11 +203,37 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     {
+      id: 'spike',
+      name: 'SPIKE',
+      tier: 'COMMON',
+      percentage: 20,
+      cumulative: 40, // 20 - 39 (20% drop chance)
+      tierStyle: {
+        border: '#7f8c8d',
+        glow: 'rgba(127, 140, 141, 0.4)',
+        color: '#dcdde1'
+      },
+      modelUrl: '/Spike.glb',
+      scale: 3.5,
+      rotationY: -Math.PI / 2,
+      headBoneName: null,
+      neckBoneName: null,
+      theme: {
+        glow: 'rgba(46, 204, 113, 0.45)',
+        glowBright: 'rgba(39, 174, 96, 0.25)',
+        rim1: 0x27ae60,
+        rim2: 0x2ecc71,
+        bottom: 0x16a085,
+        rune: 0x27ae60,
+        outerRing: 0xa4b0be
+      }
+    },
+    {
       id: 'daiciboba',
       name: 'DAICIBOBA',
       tier: 'RARE',
-      percentage: 28,
-      cumulative: 68, // 40 - 67 (28% drop chance)
+      percentage: 25,
+      cumulative: 65, // 40 - 64 (25% drop chance)
       tierStyle: {
         border: '#0984e3',
         glow: 'rgba(9, 132, 227, 0.55)',
@@ -233,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       name: 'HACKER',
       tier: 'EPIC',
       percentage: 18,
-      cumulative: 86, // 68 - 85 (18% drop chance)
+      cumulative: 83, // 65 - 82 (18% drop chance)
       tierStyle: {
         border: '#00b894',
         glow: 'rgba(0, 184, 148, 0.55)',
@@ -258,8 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'drdoom',
       name: 'DR. DOOM',
       tier: 'LEGENDARY',
-      percentage: 10,
-      cumulative: 96, // 86 - 95 (10% drop chance)
+      percentage: 11,
+      cumulative: 94, // 83 - 93 (11% drop chance)
       tierStyle: {
         border: '#fdcb6e',
         glow: 'rgba(253, 203, 110, 0.6)',
@@ -284,8 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'fufufafa',
       name: 'FUFUFAFA',
       tier: 'DIVINE',
-      percentage: 4,
-      cumulative: 100, // 96 - 99 (4% drop chance)
+      percentage: 3,
+      cumulative: 97, // 94 - 96 (3% drop chance)
       tierStyle: {
         border: '#e056fd',
         glow: 'rgba(224, 86, 253, 0.65)',
@@ -305,6 +331,32 @@ document.addEventListener('DOMContentLoaded', () => {
         rune: 0xbe2edd,
         outerRing: 0x686de0
       }
+    },
+    {
+      id: 'charizard',
+      name: 'CHARIZARD',
+      tier: 'DIVINE',
+      percentage: 3,
+      cumulative: 100, // 97 - 99 (3% drop chance)
+      tierStyle: {
+        border: '#ff4757',
+        glow: 'rgba(255, 71, 87, 0.7)',
+        color: '#ff6b81'
+      },
+      modelUrl: '/Charizard.glb',
+      scale: 3.5,
+      rotationY: -Math.PI / 2,
+      headBoneName: null,
+      neckBoneName: null,
+      theme: {
+        glow: 'rgba(255, 71, 87, 0.65)',
+        glowBright: 'rgba(255, 165, 2, 0.45)',
+        rim1: 0xff4757,
+        rim2: 0xffa502,
+        bottom: 0xff6348,
+        rune: 0xff4757,
+        outerRing: 0xffa502
+      }
     }
   ];
 
@@ -312,6 +364,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const clean = name.trim().toLowerCase();
 
     // Direct keyword match for instant verification
+    if (clean.includes('spike') || clean.includes('spaik')) {
+      return KODAMS.find((k) => k.id === 'spike') || KODAMS[0];
+    }
+    if (clean.includes('charizard') || clean.includes('naga') || clean.includes('dragon') || clean.includes('char')) {
+      return KODAMS.find((k) => k.id === 'charizard') || KODAMS[0];
+    }
     if (clean.includes('gendut') || clean.includes('gemuk') || clean.includes('fat') || clean.includes('gembrot')) {
       return KODAMS.find((k) => k.id === 'sigendut') || KODAMS[0];
     }
