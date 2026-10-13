@@ -171,29 +171,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const enterBtn = document.getElementById('enterBtn');
   const backBtn = document.getElementById('backBtn');
   const userNameLabel = document.getElementById('userNameLabel');
+  const kodamRarityBadge = document.getElementById('kodamRarityBadge');
+  const rarityTier = document.getElementById('rarityTier');
+  const rarityRate = document.getElementById('rarityRate');
 
   const KODAMS = [
     {
-      id: 'drdoom',
-      name: 'DR. DOOM',
-      modelUrl: '/DrDoom.glb',
-      scale: 3.5,
-      rotationY: -Math.PI / 2 + 0.38,
-      headBoneName: 'Bip01 Head_07',
-      neckBoneName: 'Bip01 Neck_06',
-      theme: {
-        glow: 'rgba(46, 204, 113, 0.45)',
-        glowBright: 'rgba(0, 255, 136, 0.25)',
-        rim1: 0x2ecc71,
-        rim2: 0x00ff88,
-        bottom: 0x1abc9c,
-        rune: 0x2ecc71,
-        outerRing: 0xd4af37
-      }
-    },
-    {
       id: 'sigendut',
       name: 'SI GENDUT',
+      tier: 'COMMON',
+      percentage: 40,
+      cumulative: 40, // 0 - 39 (40% drop chance)
+      tierStyle: {
+        border: '#7f8c8d',
+        glow: 'rgba(127, 140, 141, 0.4)',
+        color: '#dcdde1'
+      },
       modelUrl: '/Si Gendut.glb',
       scale: 3.5,
       rotationY: -Math.PI / 2,
@@ -210,8 +203,42 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     {
+      id: 'daiciboba',
+      name: 'DAICIBOBA',
+      tier: 'RARE',
+      percentage: 28,
+      cumulative: 68, // 40 - 67 (28% drop chance)
+      tierStyle: {
+        border: '#0984e3',
+        glow: 'rgba(9, 132, 227, 0.55)',
+        color: '#74b9ff'
+      },
+      modelUrl: '/Daiciboba.glb',
+      scale: 3.5,
+      rotationY: -Math.PI / 2,
+      headBoneName: null,
+      neckBoneName: null,
+      theme: {
+        glow: 'rgba(52, 152, 219, 0.55)',
+        glowBright: 'rgba(72, 219, 251, 0.35)',
+        rim1: 0x3498db,
+        rim2: 0x48dbfb,
+        bottom: 0x0abde3,
+        rune: 0x3498db,
+        outerRing: 0x00d2d3
+      }
+    },
+    {
       id: 'hacker',
       name: 'HACKER',
+      tier: 'EPIC',
+      percentage: 18,
+      cumulative: 86, // 68 - 85 (18% drop chance)
+      tierStyle: {
+        border: '#00b894',
+        glow: 'rgba(0, 184, 148, 0.55)',
+        color: '#55efc4'
+      },
       modelUrl: '/Hacker.glb',
       scale: 3.4,
       rotationY: -Math.PI / 2,
@@ -228,8 +255,42 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     {
+      id: 'drdoom',
+      name: 'DR. DOOM',
+      tier: 'LEGENDARY',
+      percentage: 10,
+      cumulative: 96, // 86 - 95 (10% drop chance)
+      tierStyle: {
+        border: '#fdcb6e',
+        glow: 'rgba(253, 203, 110, 0.6)',
+        color: '#ffeaa7'
+      },
+      modelUrl: '/DrDoom.glb',
+      scale: 3.5,
+      rotationY: -Math.PI / 2 + 0.38,
+      headBoneName: 'Bip01 Head_07',
+      neckBoneName: 'Bip01 Neck_06',
+      theme: {
+        glow: 'rgba(46, 204, 113, 0.45)',
+        glowBright: 'rgba(0, 255, 136, 0.25)',
+        rim1: 0x2ecc71,
+        rim2: 0x00ff88,
+        bottom: 0x1abc9c,
+        rune: 0x2ecc71,
+        outerRing: 0xd4af37
+      }
+    },
+    {
       id: 'fufufafa',
       name: 'FUFUFAFA',
+      tier: 'DIVINE',
+      percentage: 4,
+      cumulative: 100, // 96 - 99 (4% drop chance)
+      tierStyle: {
+        border: '#e056fd',
+        glow: 'rgba(224, 86, 253, 0.65)',
+        color: '#f8a5c2'
+      },
       modelUrl: '/Fufufafa.glb',
       scale: 3.5,
       rotationY: -Math.PI / 2,
@@ -254,6 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clean.includes('gendut') || clean.includes('gemuk') || clean.includes('fat') || clean.includes('gembrot')) {
       return KODAMS.find((k) => k.id === 'sigendut') || KODAMS[0];
     }
+    if (clean.includes('daiciboba') || clean.includes('daici') || clean.includes('boba')) {
+      return KODAMS.find((k) => k.id === 'daiciboba') || KODAMS[0];
+    }
     if (clean.includes('hacker') || clean.includes('hekel') || clean.includes('cyber') || clean.includes('retas')) {
       return KODAMS.find((k) => k.id === 'hacker') || KODAMS[0];
     }
@@ -264,14 +328,20 @@ document.addEventListener('DOMContentLoaded', () => {
       return KODAMS.find((k) => k.id === 'drdoom') || KODAMS[0];
     }
 
-    // Consistent FNV-1a distribution for any name
+    // Percentage drop roll (0 - 99) using consistent FNV-1a distribution
     let h = 0x811c9dc5;
     for (let i = 0; i < clean.length; i++) {
       h ^= clean.charCodeAt(i);
       h = Math.imul(h, 0x01000193);
     }
-    const idx = Math.abs(h >>> 0) % KODAMS.length;
-    return KODAMS[idx];
+    const roll = Math.abs(h >>> 0) % 100;
+
+    for (const kodam of KODAMS) {
+      if (roll < kodam.cumulative) {
+        return kodam;
+      }
+    }
+    return KODAMS[0];
   }
 
   let scene, camera, renderer, characterGroup, platformGroup;
@@ -356,6 +426,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyKodamTheme(kodam) {
     if (kodamTitleBig) {
       kodamTitleBig.textContent = kodam.name;
+    }
+    if (rarityTier) {
+      rarityTier.textContent = kodam.tier;
+    }
+    if (rarityRate) {
+      rarityRate.textContent = `${kodam.percentage}% DROP CHANCE`;
+    }
+    if (kodamRarityBadge && kodam.tierStyle) {
+      kodamRarityBadge.style.setProperty('--rarity-border', kodam.tierStyle.border);
+      kodamRarityBadge.style.setProperty('--rarity-glow', kodam.tierStyle.glow);
+      kodamRarityBadge.style.setProperty('--rarity-color', kodam.tierStyle.color);
     }
     if (kodamContainer) {
       kodamContainer.style.setProperty('--glow-color', kodam.theme.glow);

@@ -26,6 +26,13 @@
   <main class="center-container" id="inputSection">
     <header class="title-group">
       <p class="subtitle">Cari apa Yang Ada di Dalam Dirimu</p>
+      <div class="tier-pill-preview">
+        <span class="tier-tag tier-common">COMMON 40%</span>
+        <span class="tier-tag tier-rare">RARE 28%</span>
+        <span class="tier-tag tier-epic">EPIC 18%</span>
+        <span class="tier-tag tier-legendary">LEGENDARY 10%</span>
+        <span class="tier-tag tier-divine">DIVINE 4%</span>
+      </div>
       <h1 class="main-title">INSERT YOUR NAME</h1>
     </header>
 
@@ -48,9 +55,18 @@
       <canvas id="threeCanvas"></canvas>
     </div>
 
-    <!-- Foreground UI: Top subtitle and Bottom Button -->
+    <!-- Foreground UI: Top subtitle, Rarity Badge and Bottom Button -->
     <div class="kodam-foreground-ui">
-      <p class="kodam-subtitle" id="userNameLabel">KODAM ANDA</p>
+      <div class="kodam-top-info">
+        <p class="kodam-subtitle" id="userNameLabel">KODAM ANDA</p>
+        <div class="rarity-badge-container">
+          <span class="rarity-badge tier-common" id="kodamRarityBadge">
+            <span class="rarity-tier" id="rarityTier">COMMON</span>
+            <span class="rarity-divider">•</span>
+            <span class="rarity-rate" id="rarityRate">40% CHANCE</span>
+          </span>
+        </div>
+      </div>
       <button type="button" class="back-btn" id="backBtn">CEK LAGI</button>
     </div>
   </section>

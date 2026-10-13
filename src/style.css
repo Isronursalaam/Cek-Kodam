@@ -138,9 +138,63 @@ html, body {
   font-weight: 500;
   letter-spacing: 0.32em;
   color: var(--gold-sub);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   text-shadow: 0 0 10px rgba(158, 130, 76, 0.25);
+}
+
+/* Tier Pills Preview (Common to Divine) */
+.tier-pill-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px auto 16px;
+  max-width: 580px;
+}
+
+.tier-tag {
+  font-family: var(--font-serif-sub);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  background: rgba(14, 16, 20, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.tier-tag.tier-common {
+  color: #a4b0be;
+  border-color: rgba(164, 176, 190, 0.3);
+}
+
+.tier-tag.tier-rare {
+  color: #3498db;
+  border-color: rgba(52, 152, 219, 0.4);
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.15);
+}
+
+.tier-tag.tier-epic {
+  color: #2ecc71;
+  border-color: rgba(46, 204, 113, 0.4);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.15);
+}
+
+.tier-tag.tier-legendary {
+  color: #f1c40f;
+  border-color: rgba(241, 196, 15, 0.4);
+  box-shadow: 0 0 12px rgba(241, 196, 15, 0.2);
+}
+
+.tier-tag.tier-divine {
+  color: #e056fd;
+  border-color: rgba(224, 86, 253, 0.45);
+  box-shadow: 0 0 14px rgba(224, 86, 253, 0.25);
 }
 
 /* Main Title: "INSERT YOUR NAME" */
@@ -355,14 +409,62 @@ html, body {
   pointer-events: none;
 }
 
+.kodam-top-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
 .kodam-subtitle {
   font-family: var(--font-serif-sub);
   font-size: 0.95rem;
   letter-spacing: 0.38em;
   color: #a8905b;
   text-transform: uppercase;
-  margin-top: 15px;
+  margin-top: 0;
   text-shadow: 0 0 12px rgba(168, 144, 91, 0.4);
+}
+
+.rarity-badge-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rarity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px;
+  border-radius: 30px;
+  background: rgba(14, 16, 20, 0.85);
+  border: 1px solid var(--rarity-border, #a4b0be);
+  box-shadow: 0 0 18px var(--rarity-glow, rgba(164, 176, 190, 0.35));
+  backdrop-filter: blur(10px);
+  font-family: var(--font-serif-sub);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rarity-color, #ffffff);
+  animation: rarityPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes rarityPulse {
+  0% { transform: scale(1); box-shadow: 0 0 12px var(--rarity-glow, rgba(255, 255, 255, 0.2)); }
+  100% { transform: scale(1.03); box-shadow: 0 0 24px var(--rarity-glow, rgba(255, 255, 255, 0.45)); }
+}
+
+.rarity-divider {
+  opacity: 0.45;
+}
+
+.rarity-rate {
+  font-size: 0.70rem;
+  opacity: 0.88;
+  letter-spacing: 0.12em;
 }
 
 .back-btn {
