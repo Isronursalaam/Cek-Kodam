@@ -226,6 +226,24 @@ document.addEventListener('DOMContentLoaded', () => {
         rune: 0x00f2fe,
         outerRing: 0x10ac84
       }
+    },
+    {
+      id: 'fufufafa',
+      name: 'FUFUFAFA',
+      modelUrl: '/Fufufafa.glb',
+      scale: 3.5,
+      rotationY: -Math.PI / 2,
+      headBoneName: null,
+      neckBoneName: null,
+      theme: {
+        glow: 'rgba(155, 89, 182, 0.55)',
+        glowBright: 'rgba(224, 86, 253, 0.35)',
+        rim1: 0x9b59b6,
+        rim2: 0xe056fd,
+        bottom: 0x8854d0,
+        rune: 0xbe2edd,
+        outerRing: 0x686de0
+      }
     }
   ];
 
@@ -238,6 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (clean.includes('hacker') || clean.includes('hekel') || clean.includes('cyber') || clean.includes('retas')) {
       return KODAMS.find((k) => k.id === 'hacker') || KODAMS[0];
+    }
+    if (clean.includes('fufufafa') || clean.includes('fufu') || clean.includes('fafa') || clean.includes('gibran') || clean.includes('samsul')) {
+      return KODAMS.find((k) => k.id === 'fufufafa') || KODAMS[0];
     }
     if (clean.includes('doom') || clean.includes('dr doom') || clean.includes('doctor')) {
       return KODAMS.find((k) => k.id === 'drdoom') || KODAMS[0];
