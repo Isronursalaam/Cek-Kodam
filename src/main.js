@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
@@ -160,27 +161,191 @@ document.addEventListener('DOMContentLoaded', () => {
   animateSmoke();
 
   /* ==========================================================================
-     2. Three.js 3D Kodam Stage (Dr. Doom - Burst Out Of Screen Effect)
+     2. Three.js 3D Kodam Stage (Dr. Doom, Si Gendut, Hacker)
      ========================================================================== */
   const threeCanvas = document.getElementById('threeCanvas');
   const inputSection = document.getElementById('inputSection');
   const kodamContainer = document.getElementById('kodamContainer');
+  const kodamTitleBig = document.getElementById('kodamTitleBig');
   const nameInput = document.getElementById('nameInput');
   const enterBtn = document.getElementById('enterBtn');
   const backBtn = document.getElementById('backBtn');
   const userNameLabel = document.getElementById('userNameLabel');
 
-  let scene, camera, renderer, characterGroup, platformGroup, mixer;
-  let headBone = null;
-  let neckBone = null;
+  const KODAMS = [
+    {
+      id: 'drdoom',
+      name: 'DR. DOOM',
+      modelUrl: '/DrDoom.glb',
+      scale: 3.5,
+      rotationY: -Math.PI / 2 + 0.38,
+      headBoneName: 'Bip01 Head_07',
+      neckBoneName: 'Bip01 Neck_06',
+      theme: {
+        glow: 'rgba(46, 204, 113, 0.45)',
+        glowBright: 'rgba(0, 255, 136, 0.25)',
+        rim1: 0x2ecc71,
+        rim2: 0x00ff88,
+        bottom: 0x1abc9c,
+        rune: 0x2ecc71,
+        outerRing: 0xd4af37
+      }
+    },
+    {
+      id: 'sigendut',
+      name: 'SI GENDUT',
+      modelUrl: '/Si Gendut.glb',
+      scale: 3.5,
+      rotationY: -Math.PI / 2,
+      headBoneName: null,
+      neckBoneName: null,
+      theme: {
+        glow: 'rgba(255, 159, 67, 0.55)',
+        glowBright: 'rgba(254, 202, 87, 0.35)',
+        rim1: 0xff9f43,
+        rim2: 0xfeca57,
+        bottom: 0xee5253,
+        rune: 0xff9f43,
+        outerRing: 0xffd32a
+      }
+    },
+    {
+      id: 'hacker',
+      name: 'HACKER',
+      modelUrl: '/Hacker.glb',
+      scale: 3.4,
+      rotationY: -Math.PI / 2,
+      headBoneName: null,
+      neckBoneName: null,
+      theme: {
+        glow: 'rgba(0, 210, 211, 0.55)',
+        glowBright: 'rgba(16, 172, 132, 0.35)',
+        rim1: 0x00d2d3,
+        rim2: 0x1dd1a1,
+        bottom: 0x54a0ff,
+        rune: 0x00f2fe,
+        outerRing: 0x10ac84
+      }
+    }
+  ];
+
+  function getKodamForName(name) {
+    const clean = name.trim().toLowerCase();
+
+    // Direct keyword match for instant verification
+    if (clean.includes('gendut') || clean.includes('gemuk') || clean.includes('fat') || clean.includes('gembrot')) {
+      return KODAMS.find((k) => k.id === 'sigendut') || KODAMS[0];
+    }
+    if (clean.includes('hacker') || clean.includes('hekel') || clean.includes('cyber') || clean.includes('retas')) {
+      return KODAMS.find((k) => k.id === 'hacker') || KODAMS[0];
+    }
+    if (clean.includes('doom') || clean.includes('dr doom') || clean.includes('doctor')) {
+      return KODAMS.find((k) => k.id === 'drdoom') || KODAMS[0];
+    }
+
+    // Consistent FNV-1a distribution for any name
+    let h = 0x811c9dc5;
+    for (let i = 0; i < clean.length; i++) {
+      h ^= clean.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    const idx = Math.abs(h >>> 0) % KODAMS.length;
+    return KODAMS[idx];
+  }
+
+  let scene, camera, renderer, characterGroup, platformGroup;
+  let greenRimLight1, greenRimLight2, bottomGlow, runeRing, outerRing;
+  let currentMixer = null;
+  let currentActions = {};
+  let currentHeadBone = null;
+  let currentNeckBone = null;
   let targetHeadYaw = 0;
   let targetHeadPitch = 0;
-  let actions = {};
-  let baseScale = 1.0;
   let animPhase = 'OFF'; // 'WALKING', 'TURNING', 'IDLE', 'OFF'
   let animStartTime = 0;
   const WALK_DURATION = 2.2; // seconds walking in from side
   const TURN_DURATION = 0.8; // seconds turning to face camera
+
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+  const loadedModels = {};
+
+  function loadKodamModel(kodam) {
+    if (loadedModels[kodam.id]) {
+      return Promise.resolve(loadedModels[kodam.id]);
+    }
+
+    return new Promise((resolve, reject) => {
+      gltfLoader.load(
+        kodam.modelUrl,
+        (gltf) => {
+          const model = gltf.scene;
+
+          // Auto-center mesh inside model container
+          const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+
+          model.position.x = -center.x;
+          model.position.y = -center.y;
+          model.position.z = -center.z;
+          model.rotation.y = kodam.rotationY;
+
+          // Normalize height to optimal framing scale
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const baseScale = kodam.scale / maxDim;
+
+          const modelGroup = new THREE.Group();
+          modelGroup.scale.setScalar(baseScale);
+          modelGroup.add(model);
+
+          // Find head and neck bones if available
+          const headBone = kodam.headBoneName ? model.getObjectByName(kodam.headBoneName) : null;
+          const neckBone = kodam.neckBoneName ? model.getObjectByName(kodam.neckBoneName) : null;
+
+          // Skeletal animation clips if available
+          let mixer = null;
+          const actions = {};
+          if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            gltf.animations.forEach((clip) => {
+              actions[clip.name] = mixer.clipAction(clip);
+            });
+          }
+
+          const data = {
+            modelGroup,
+            mixer,
+            actions,
+            headBone,
+            neckBone
+          };
+          loadedModels[kodam.id] = data;
+          resolve(data);
+        },
+        undefined,
+        (err) => {
+          console.error(`Error loading model ${kodam.modelUrl}:`, err);
+          reject(err);
+        }
+      );
+    });
+  }
+
+  function applyKodamTheme(kodam) {
+    if (kodamTitleBig) {
+      kodamTitleBig.textContent = kodam.name;
+    }
+    if (kodamContainer) {
+      kodamContainer.style.setProperty('--glow-color', kodam.theme.glow);
+      kodamContainer.style.setProperty('--glow-color-bright', kodam.theme.glowBright);
+    }
+    if (greenRimLight1) greenRimLight1.color.setHex(kodam.theme.rim1);
+    if (greenRimLight2) greenRimLight2.color.setHex(kodam.theme.rim2);
+    if (bottomGlow) bottomGlow.color.setHex(kodam.theme.bottom);
+    if (runeRing) runeRing.material.color.setHex(kodam.theme.rune);
+    if (outerRing) outerRing.material.color.setHex(kodam.theme.outerRing);
+  }
 
   function initThree() {
     scene = new THREE.Scene();
@@ -198,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.4;
 
-    // Atmospheric Lighting for Dr. Doom
+    // Atmospheric Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
 
@@ -206,21 +371,20 @@ document.addEventListener('DOMContentLoaded', () => {
     dirLight.position.set(2, 6, 5);
     scene.add(dirLight);
 
-    // Dr. Doom Emerald Sorcery Rim Lights
-    const greenRimLight1 = new THREE.PointLight(0x2ecc71, 6.0, 18);
+    greenRimLight1 = new THREE.PointLight(0x2ecc71, 6.0, 18);
     greenRimLight1.position.set(-3.5, 1.5, 3);
     scene.add(greenRimLight1);
 
-    const greenRimLight2 = new THREE.PointLight(0x00ff88, 5.0, 18);
+    greenRimLight2 = new THREE.PointLight(0x00ff88, 5.0, 18);
     greenRimLight2.position.set(3.5, 1.0, 2);
     scene.add(greenRimLight2);
 
-    const bottomGlow = new THREE.PointLight(0x1abc9c, 3.5, 12);
+    bottomGlow = new THREE.PointLight(0x1abc9c, 3.5, 12);
     bottomGlow.position.set(0, -3.5, 2);
     scene.add(bottomGlow);
 
     // -------------------------------------------------------------
-    // Floor Platform (Pedestal under Dr. Doom)
+    // Floor Platform (Pedestal under Kodam)
     // -------------------------------------------------------------
     platformGroup = new THREE.Group();
     platformGroup.position.set(0, -2.38, 1.7);
@@ -237,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const platformBase = new THREE.Mesh(cylGeo, cylMat);
     platformGroup.add(platformBase);
 
-    // Glowing Emerald Runic Ring
+    // Glowing Runic Ring
     const ringGeo = new THREE.RingGeometry(1.65, 1.85, 64);
     const ringMat = new THREE.MeshBasicMaterial({
       color: 0x2ecc71,
@@ -246,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
       opacity: 0.8,
       blending: THREE.AdditiveBlending
     });
-    const runeRing = new THREE.Mesh(ringGeo, ringMat);
+    runeRing = new THREE.Mesh(ringGeo, ringMat);
     runeRing.rotation.x = -Math.PI / 2;
     runeRing.position.y = 0.145;
     platformGroup.add(runeRing);
@@ -260,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
       opacity: 0.55,
       blending: THREE.AdditiveBlending
     });
-    const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+    outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
     outerRing.rotation.x = -Math.PI / 2;
     outerRing.position.y = 0.145;
     platformGroup.add(outerRing);
@@ -290,48 +454,12 @@ document.addEventListener('DOMContentLoaded', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Load Dr. Doom 3D Model
-    const loader = new GLTFLoader();
-    loader.load(
-      '/DrDoom.glb',
-      (gltf) => {
-        const model = gltf.scene;
-
-        // Auto-center Dr. Doom mesh inside characterGroup
-        const box = new THREE.Box3().setFromObject(model);
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-
-        model.position.x = -center.x;
-        model.position.y = -center.y;
-        model.position.z = -center.z;
-
-        // Turn Dr. Doom to face directly front-center towards the user
-        model.rotation.y = -Math.PI / 2 + 0.38;
-
-        // Normalize height to ~3.5 units for optimal framing
-        const maxDim = Math.max(size.x, size.y, size.z);
-        baseScale = 3.5 / maxDim;
-        characterGroup.scale.setScalar(baseScale);
-        characterGroup.add(model);
-
-        // Find Head and Neck bones for realistic cursor tracking
-        headBone = model.getObjectByName('Bip01 Head_07');
-        neckBone = model.getObjectByName('Bip01 Neck_06');
-
-        // Store all skeletal animation clips
-        if (gltf.animations && gltf.animations.length > 0) {
-          mixer = new THREE.AnimationMixer(model);
-          gltf.animations.forEach((clip) => {
-            actions[clip.name] = mixer.clipAction(clip);
-          });
-        }
-      },
-      undefined,
-      (err) => {
-        console.error('Error loading DrDoom.glb:', err);
-      }
-    );
+    // Preload all Kodam 3D models for instant reveal
+    KODAMS.forEach((kodam) => {
+      loadKodamModel(kodam).catch((err) => {
+        console.warn(`Preload error for ${kodam.name}:`, err);
+      });
+    });
   }
 
   initThree();
@@ -344,14 +472,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const delta = clock.getDelta();
     const elapsedTime = clock.getElapsedTime();
 
-    if (mixer) mixer.update(delta);
+    if (currentMixer) currentMixer.update(delta);
 
     if (characterGroup && characterGroup.visible && animPhase !== 'OFF') {
       const elapsed = elapsedTime - animStartTime;
 
       if (elapsed < WALK_DURATION) {
         // -----------------------------------------------------------
-        // PHASE 1: WALKING FORWARD FROM THE SIDE
+        // PHASE 1: WALKING / GLIDING FORWARD FROM THE SIDE
         // -----------------------------------------------------------
         animPhase = 'WALKING';
         const walkProgress = elapsed / WALK_DURATION;
@@ -359,10 +487,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Travels from side (-5.8) to center (0.0)
         characterGroup.position.x = -5.8 + 5.8 * walkEase;
-        characterGroup.position.y = -0.65;
+        // Subtle bobbing for static models without walking clip
+        const bob = currentActions['walk'] ? 0 : Math.sin(walkProgress * Math.PI * 6) * 0.08;
+        characterGroup.position.y = -0.65 + bob;
         characterGroup.position.z = 0.6 + 1.1 * walkEase;
 
-        // Facing FORWARD in the direction of motion (Math.PI / 2 points him right!)
+        // Facing forward in the direction of motion
         characterGroup.rotation.y = Math.PI / 2;
         characterGroup.rotation.x = 0;
 
@@ -384,9 +514,9 @@ document.addEventListener('DOMContentLoaded', () => {
         characterGroup.rotation.x = 0;
 
         // Crossfade from walk to idle smoothly
-        if (!hasCrossfadedToIdle && actions['walk'] && actions['idle']) {
-          actions['walk'].crossFadeTo(actions['idle'], 0.5, false);
-          actions['idle'].reset().play();
+        if (!hasCrossfadedToIdle && currentActions['walk'] && currentActions['idle']) {
+          currentActions['walk'].crossFadeTo(currentActions['idle'], 0.5, false);
+          currentActions['idle'].reset().play();
           hasCrossfadedToIdle = true;
         }
 
@@ -406,16 +536,21 @@ document.addEventListener('DOMContentLoaded', () => {
         characterGroup.rotation.y = THREE.MathUtils.lerp(characterGroup.rotation.y, mouseNormX * 0.12, 0.05);
 
         // Realistic Head & Neck Gaze Tracking following cursor
-        targetHeadYaw = THREE.MathUtils.lerp(targetHeadYaw, -mouseNormX * 0.55, 0.08);
-        targetHeadPitch = THREE.MathUtils.lerp(targetHeadPitch, mouseNormY * 0.28, 0.08);
+        if (currentNeckBone || currentHeadBone) {
+          targetHeadYaw = THREE.MathUtils.lerp(targetHeadYaw, -mouseNormX * 0.55, 0.08);
+          targetHeadPitch = THREE.MathUtils.lerp(targetHeadPitch, mouseNormY * 0.28, 0.08);
 
-        if (neckBone) {
-          neckBone.rotateOnAxis(new THREE.Vector3(1, 0, 0), targetHeadYaw * 0.35);
-          neckBone.rotateOnAxis(new THREE.Vector3(0, 1, 0), targetHeadPitch * 0.35);
-        }
-        if (headBone) {
-          headBone.rotateOnAxis(new THREE.Vector3(1, 0, 0), targetHeadYaw * 0.65);
-          headBone.rotateOnAxis(new THREE.Vector3(0, 1, 0), targetHeadPitch * 0.65);
+          if (currentNeckBone) {
+            currentNeckBone.rotateOnAxis(new THREE.Vector3(1, 0, 0), targetHeadYaw * 0.35);
+            currentNeckBone.rotateOnAxis(new THREE.Vector3(0, 1, 0), targetHeadPitch * 0.35);
+          }
+          if (currentHeadBone) {
+            currentHeadBone.rotateOnAxis(new THREE.Vector3(1, 0, 0), targetHeadPitch * 0.65);
+            currentHeadBone.rotateOnAxis(new THREE.Vector3(0, 1, 0), targetHeadYaw * 0.65);
+          }
+        } else {
+          // Interactive pitch tilting for static characters
+          characterGroup.rotation.x = THREE.MathUtils.lerp(characterGroup.rotation.x, -mouseNormY * 0.08, 0.05);
         }
       }
     }
@@ -435,7 +570,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const selectedKodam = getKodamForName(name);
     userNameLabel.textContent = `KODAM DARI "${name.toUpperCase()}"`;
+    applyKodamTheme(selectedKodam);
+
+    // Clear any previous character in characterGroup
+    while (characterGroup.children.length > 0) {
+      characterGroup.remove(characterGroup.children[0]);
+    }
+    if (currentMixer) {
+      currentMixer.stopAllAction();
+    }
 
     // 1. Fade out the input UI
     inputSection.classList.add('fade-out');
@@ -449,8 +594,15 @@ document.addEventListener('DOMContentLoaded', () => {
       platformGroup.visible = true;
     }
 
-    // 3. Trigger 3D Dr. Doom walking in from side sequence
-    if (characterGroup) {
+    loadKodamModel(selectedKodam).then((data) => {
+      currentMixer = data.mixer;
+      currentActions = data.actions;
+      currentHeadBone = data.headBone;
+      currentNeckBone = data.neckBone;
+
+      characterGroup.add(data.modelGroup);
+
+      // 3. Trigger 3D Kodam walking / gliding in from side sequence
       characterGroup.visible = true;
       characterGroup.position.set(-5.8, -0.65, 0.6);
       characterGroup.rotation.set(0, Math.PI / 2, 0);
@@ -459,12 +611,14 @@ document.addEventListener('DOMContentLoaded', () => {
       animStartTime = clock.getElapsedTime();
       animPhase = 'WALKING';
 
-      // Start playing walk animation
-      if (actions['idle']) actions['idle'].stop();
-      if (actions['walk']) {
-        actions['walk'].reset().play();
+      // Start playing walk animation if available
+      if (currentActions['idle']) currentActions['idle'].stop();
+      if (currentActions['walk']) {
+        currentActions['walk'].reset().play();
       }
-    }
+    }).catch((err) => {
+      console.error('Error revealing Kodam:', err);
+    });
   }
 
   // Reset back to input screen
@@ -474,10 +628,15 @@ document.addEventListener('DOMContentLoaded', () => {
       kodamContainer.classList.add('hidden');
       inputSection.classList.remove('fade-out');
       animPhase = 'OFF';
-      if (characterGroup) characterGroup.visible = false;
+      if (characterGroup) {
+        characterGroup.visible = false;
+        while (characterGroup.children.length > 0) {
+          characterGroup.remove(characterGroup.children[0]);
+        }
+      }
       if (platformGroup) platformGroup.visible = false;
-      if (actions['walk']) actions['walk'].stop();
-      if (actions['idle']) actions['idle'].stop();
+      if (currentActions['walk']) currentActions['walk'].stop();
+      if (currentActions['idle']) currentActions['idle'].stop();
       nameInput.value = '';
       nameInput.focus();
     }, 400);

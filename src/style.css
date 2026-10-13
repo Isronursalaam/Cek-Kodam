@@ -309,18 +309,18 @@ html, body {
   white-space: nowrap;
   line-height: 1;
   text-shadow: 
-    0 0 35px rgba(46, 204, 113, 0.45),
-    0 0 75px rgba(0, 255, 136, 0.25),
-    0 0 120px rgba(46, 204, 113, 0.15);
+    0 0 35px var(--glow-color, rgba(46, 204, 113, 0.45)),
+    0 0 75px var(--glow-color-bright, rgba(0, 255, 136, 0.25)),
+    0 0 120px var(--glow-color, rgba(46, 204, 113, 0.15));
   animation: glowPulse 4s ease-in-out infinite alternate;
 }
 
 @keyframes glowPulse {
   0% {
-    text-shadow: 0 0 30px rgba(46, 204, 113, 0.35), 0 0 70px rgba(0, 255, 136, 0.18);
+    text-shadow: 0 0 30px var(--glow-color, rgba(46, 204, 113, 0.35)), 0 0 70px var(--glow-color-bright, rgba(0, 255, 136, 0.18));
   }
   100% {
-    text-shadow: 0 0 45px rgba(46, 204, 113, 0.55), 0 0 95px rgba(0, 255, 136, 0.32);
+    text-shadow: 0 0 45px var(--glow-color, rgba(46, 204, 113, 0.55)), 0 0 95px var(--glow-color-bright, rgba(0, 255, 136, 0.32));
   }
 }
 
